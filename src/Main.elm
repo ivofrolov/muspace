@@ -7,24 +7,21 @@ import Html.Styled as Html
 import Html.Styled.Attributes as Attributes
 import Html.Styled.Events as Events
 import Json.Decode as Decode
+import Set
 import Task
 
 
-defaultGridCellSize =
-    26
-
-
-defaultGridGap =
-    1
-
-
 type alias Vector2 =
-    { i : Int, j : Int }
+    ( Int, Int )
+
+
+type alias Scale =
+    Set.Set Vector2
 
 
 type alias Cell =
-    { i : Int
-    , j : Int
+    { x : Int
+    , y : Int
     , text : String
     , highlighted : Bool
     }
@@ -38,22 +35,21 @@ type alias Grid =
     }
 
 
-type alias Scale =
-    List Vector2
+type Mode
+    = Pick
+    | Place
 
 
 type alias Model =
-    { grid : Grid, hoverRoot : Vector2, hoverChord : Scale }
+    { grid : Grid
+    , mode : Mode
+    , picked : Scale
+    }
 
 
 type Msg
     = Resize Dom.Viewport
-    | SetRoot Vector2
-
-
-majorChord : Scale
-majorChord =
-    [ Vector2 1 0, Vector2 0 1 ]
+    | PlaceScale Vector2
 
 
 main =
@@ -67,14 +63,9 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { grid =
-            { rows = 0
-            , columns = 0
-            , cellSize = defaultGridCellSize
-            , gap = defaultGridGap
-            }
-      , hoverRoot = { i = 0, j = 0 }
-      , hoverChord = majorChord
+    ( { grid = { columns = 0, rows = 0, cellSize = 26, gap = 1 }
+      , mode = Pick
+      , picked = Set.fromList [ ( 1, 0 ), ( 0, 1 ) ]
       }
     , Task.perform Resize Dom.getViewport
     )
@@ -89,25 +80,38 @@ update msg model =
                     fitGrid
                         (truncate viewport.viewport.width)
                         (truncate viewport.viewport.height)
-                        defaultGridCellSize
-                        defaultGridGap
+                        model.grid
               }
             , Cmd.none
             )
 
-        SetRoot root ->
-            ( { model | hoverRoot = root }, Cmd.none )
+        PlaceScale position ->
+            case model.mode of
+                Pick ->
+                    ( { model
+                        | picked =
+                            toggleSet
+                                (noteToDegree (pickRoot model.grid) position)
+                                model.picked
+                      }
+                    , Cmd.none
+                    )
+
+                Place ->
+                    ( model, Cmd.none )
 
 
 view : Model -> Browser.Document Msg
 view model =
     { title = "muspace"
     , body =
-        [ Html.div
-            [ Attributes.css [ gridStyle model.grid ]
-            , onMouseOverCell SetRoot
+        [ Html.div []
+            [ Html.div
+                [ Attributes.css [ gridStyle model.grid ]
+                , onCellClick PlaceScale
+                ]
+                (List.map renderCell (generateCells model))
             ]
-            (List.map renderCell (generateSpace model.grid (buildChord model.hoverChord model.hoverRoot)))
             |> Html.toUnstyled
         ]
     }
@@ -155,28 +159,30 @@ highlightedCellStyle =
         ]
 
 
-dataset : String -> Decode.Decoder String
-dataset field =
+decodeDataset : String -> Decode.Decoder String
+decodeDataset field =
     Decode.at [ "target", "dataset", field ] Decode.string
 
 
-onMouseOverCell : (Vector2 -> msg) -> Html.Attribute msg
-onMouseOverCell tagger =
+decodeCellPosition : Decode.Decoder Vector2
+decodeCellPosition =
     let
         toInt =
             Decode.map (String.toInt >> Maybe.withDefault 0)
-
-        position =
-            Decode.map2 Vector2 (dataset "i" |> toInt) (dataset "j" |> toInt)
     in
-    Events.on "mouseover" (Decode.map tagger position)
+    Decode.map2 Tuple.pair (decodeDataset "x" |> toInt) (decodeDataset "y" |> toInt)
+
+
+onCellClick : (Vector2 -> msg) -> Html.Attribute msg
+onCellClick tagger =
+    Events.on "click" (Decode.map tagger decodeCellPosition)
 
 
 renderCell : Cell -> Html.Html msg
 renderCell cell =
     Html.div
-        [ Attributes.attribute "data-i" (String.fromInt cell.i)
-        , Attributes.attribute "data-j" (String.fromInt cell.j)
+        [ Attributes.attribute "data-x" (String.fromInt cell.x)
+        , Attributes.attribute "data-y" (String.fromInt cell.y)
         , Attributes.css
             [ if cell.highlighted then
                 highlightedCellStyle
@@ -185,54 +191,88 @@ renderCell cell =
                 cellStyle
             ]
         ]
-        [ Html.span [] [ Html.text cell.text ] ]
+        [ Html.text cell.text ]
 
 
-fitGrid : Int -> Int -> Int -> Int -> Grid
-fitGrid width height cellSize gap =
-    { columns = (width + gap) // (cellSize + gap)
-    , rows = (height + gap) // (cellSize + gap)
-    , cellSize = cellSize
-    , gap = gap
+generateCells : Model -> List Cell
+generateCells model =
+    let
+        highlightedNotes =
+            buildChord (pickRoot model.grid) model.picked
+
+        cell x y =
+            { x = x
+            , y = y
+            , text = noteNameAt x y
+            , highlighted = Set.member ( x, y ) highlightedNotes
+            }
+    in
+    List.range 0 ((model.grid.rows * model.grid.columns) - 1)
+        |> List.map (\x -> cell (modBy model.grid.columns x) (x // model.grid.columns))
+
+
+fitGrid : Int -> Int -> Grid -> Grid
+fitGrid width height grid =
+    { grid
+        | columns = (width + grid.gap) // (grid.cellSize + grid.gap)
+        , rows = (height + grid.gap) // (grid.cellSize + grid.gap)
     }
 
 
-generateSpace : Grid -> Scale -> List Cell
-generateSpace grid scale =
-    let
-        highlighted x =
-            List.member x scale
-
-        cell i j =
-            { i = i, j = j, text = note i j, highlighted = highlighted (Vector2 i j) }
-    in
-    List.range 0 ((grid.rows * grid.columns) - 1)
-        |> List.map (\x -> cell (modBy grid.columns x) (x // grid.columns))
+pickRoot : Grid -> Vector2
+pickRoot grid =
+    ( grid.columns // 2, grid.rows // 2 )
 
 
-note : Int -> Int -> String
-note i j =
+noteNameAt : Int -> Int -> String
+noteNameAt x y =
     let
         notes =
             [ "c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b" ]
 
-        -- i fifths and j thirds from the top-left corner
+        -- x fifths and y thirds from the top-left corner
         steps =
-            modBy 12 ((i * 7) + (j * (12 - 4)))
+            modBy 12 ((x * 7) + (y * (12 - 4)))
     in
-    case List.head (List.drop steps notes) of
-        Just x ->
-            x
-
-        Nothing ->
-            "?"
+    List.head (List.drop steps notes) |> Maybe.withDefault "?"
 
 
-buildChord : Scale -> Vector2 -> Scale
-buildChord degrees root =
-    let
-        add x y =
-            -- flip j coordinate, because (0, 0) is in the top-left corner
-            Vector2 (x.i + y.i) (x.j - y.j)
-    in
-    root :: List.map (add root) degrees
+degreeToNote : Vector2 -> Vector2 -> Vector2
+degreeToNote root degree =
+    -- flip y coordinate, because (0, 0) is in the top-left corner
+    addVectors root (transformVector ( 1, -1 ) degree)
+
+
+noteToDegree : Vector2 -> Vector2 -> Vector2
+noteToDegree root note =
+    -- flip y coordinate, because (0, 0) is in the top-left corner
+    subtractVectors note root |> transformVector ( 1, -1 )
+
+
+buildChord : Vector2 -> Scale -> Scale
+buildChord root degrees =
+    Set.union (Set.singleton root) (Set.map (degreeToNote root) degrees)
+
+
+addVectors : Vector2 -> Vector2 -> Vector2
+addVectors ( ax, ay ) ( bx, by ) =
+    ( ax + bx, ay + by )
+
+
+subtractVectors : Vector2 -> Vector2 -> Vector2
+subtractVectors ( ax, ay ) ( bx, by ) =
+    ( ax - bx, ay - by )
+
+
+transformVector : Vector2 -> Vector2 -> Vector2
+transformVector ( tx, ty ) ( ax, ay ) =
+    ( ax * tx, ay * ty )
+
+
+toggleSet : comparable -> Set.Set comparable -> Set.Set comparable
+toggleSet value set =
+    if Set.member value set then
+        Set.remove value set
+
+    else
+        Set.insert value set

@@ -10554,35 +10554,95 @@ var $elm$core$Basics$never = function (_v0) {
 	}
 };
 var $elm$browser$Browser$document = _Browser_document;
+var $author$project$Main$Pick = {$: 'Pick'};
 var $author$project$Main$Resize = function (a) {
 	return {$: 'Resize', a: a};
 };
-var $author$project$Main$defaultGridCellSize = 26;
-var $author$project$Main$defaultGridGap = 1;
-var $elm$browser$Browser$Dom$getViewport = _Browser_withWindow(_Browser_getViewport);
-var $author$project$Main$Vector2 = F2(
-	function (i, j) {
-		return {i: i, j: j};
+var $elm$core$Set$Set_elm_builtin = function (a) {
+	return {$: 'Set_elm_builtin', a: a};
+};
+var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
+var $elm$core$Set$insert = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A3($elm$core$Dict$insert, key, _Utils_Tuple0, dict));
 	});
-var $author$project$Main$majorChord = _List_fromArray(
-	[
-		A2($author$project$Main$Vector2, 1, 0),
-		A2($author$project$Main$Vector2, 0, 1)
-	]);
+var $elm$core$Set$fromList = function (list) {
+	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
+};
+var $elm$browser$Browser$Dom$getViewport = _Browser_withWindow(_Browser_getViewport);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
 		{
-			grid: {cellSize: $author$project$Main$defaultGridCellSize, columns: 0, gap: $author$project$Main$defaultGridGap, rows: 0},
-			hoverChord: $author$project$Main$majorChord,
-			hoverRoot: {i: 0, j: 0}
+			grid: {cellSize: 26, columns: 0, gap: 1, rows: 0},
+			mode: $author$project$Main$Pick,
+			picked: $elm$core$Set$fromList(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(1, 0),
+						_Utils_Tuple2(0, 1)
+					]))
 		},
 		A2($elm$core$Task$perform, $author$project$Main$Resize, $elm$browser$Browser$Dom$getViewport));
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Main$fitGrid = F4(
-	function (width, height, cellSize, gap) {
-		return {cellSize: cellSize, columns: ((width + gap) / (cellSize + gap)) | 0, gap: gap, rows: ((height + gap) / (cellSize + gap)) | 0};
+var $author$project$Main$fitGrid = F3(
+	function (width, height, grid) {
+		return _Utils_update(
+			grid,
+			{columns: ((width + grid.gap) / (grid.cellSize + grid.gap)) | 0, rows: ((height + grid.gap) / (grid.cellSize + grid.gap)) | 0});
+	});
+var $author$project$Main$subtractVectors = F2(
+	function (_v0, _v1) {
+		var ax = _v0.a;
+		var ay = _v0.b;
+		var bx = _v1.a;
+		var by = _v1.b;
+		return _Utils_Tuple2(ax - bx, ay - by);
+	});
+var $author$project$Main$transformVector = F2(
+	function (_v0, _v1) {
+		var tx = _v0.a;
+		var ty = _v0.b;
+		var ax = _v1.a;
+		var ay = _v1.b;
+		return _Utils_Tuple2(ax * tx, ay * ty);
+	});
+var $author$project$Main$noteToDegree = F2(
+	function (root, note) {
+		return A2(
+			$author$project$Main$transformVector,
+			_Utils_Tuple2(1, -1),
+			A2($author$project$Main$subtractVectors, note, root));
+	});
+var $author$project$Main$pickRoot = function (grid) {
+	return _Utils_Tuple2((grid.columns / 2) | 0, (grid.rows / 2) | 0);
+};
+var $elm$core$Dict$member = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$get, key, dict);
+		if (_v0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var $elm$core$Set$member = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return A2($elm$core$Dict$member, key, dict);
+	});
+var $elm$core$Set$remove = F2(
+	function (key, _v0) {
+		var dict = _v0.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A2($elm$core$Dict$remove, key, dict));
+	});
+var $author$project$Main$toggleSet = F2(
+	function (value, set) {
+		return A2($elm$core$Set$member, value, set) ? A2($elm$core$Set$remove, value, set) : A2($elm$core$Set$insert, value, set);
 	});
 var $elm$core$Basics$truncate = _Basics_truncate;
 var $author$project$Main$update = F2(
@@ -10593,35 +10653,34 @@ var $author$project$Main$update = F2(
 				_Utils_update(
 					model,
 					{
-						grid: A4($author$project$Main$fitGrid, viewport.viewport.width | 0, viewport.viewport.height | 0, $author$project$Main$defaultGridCellSize, $author$project$Main$defaultGridGap)
+						grid: A3($author$project$Main$fitGrid, viewport.viewport.width | 0, viewport.viewport.height | 0, model.grid)
 					}),
 				$elm$core$Platform$Cmd$none);
 		} else {
-			var root = msg.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{hoverRoot: root}),
-				$elm$core$Platform$Cmd$none);
+			var position = msg.a;
+			var _v1 = model.mode;
+			if (_v1.$ === 'Pick') {
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							picked: A2(
+								$author$project$Main$toggleSet,
+								A2(
+									$author$project$Main$noteToDegree,
+									$author$project$Main$pickRoot(model.grid),
+									position),
+								model.picked)
+						}),
+					$elm$core$Platform$Cmd$none);
+			} else {
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			}
 		}
 	});
-var $author$project$Main$SetRoot = function (a) {
-	return {$: 'SetRoot', a: a};
+var $author$project$Main$PlaceScale = function (a) {
+	return {$: 'PlaceScale', a: a};
 };
-var $author$project$Main$buildChord = F2(
-	function (degrees, root) {
-		var add = F2(
-			function (x, y) {
-				return A2($author$project$Main$Vector2, x.i + y.i, x.j - y.j);
-			});
-		return A2(
-			$elm$core$List$cons,
-			root,
-			A2(
-				$elm$core$List$map,
-				add(root),
-				degrees));
-	});
 var $rtfeldman$elm_css$VirtualDom$Styled$Attribute = F3(
 	function (a, b, c) {
 		return {$: 'Attribute', a: a, b: b, c: c};
@@ -12276,54 +12335,118 @@ var $rtfeldman$elm_css$VirtualDom$Styled$Node = F3(
 var $rtfeldman$elm_css$VirtualDom$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$Node;
 var $rtfeldman$elm_css$Html$Styled$node = $rtfeldman$elm_css$VirtualDom$Styled$node;
 var $rtfeldman$elm_css$Html$Styled$div = $rtfeldman$elm_css$Html$Styled$node('div');
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
+var $author$project$Main$addVectors = F2(
+	function (_v0, _v1) {
+		var ax = _v0.a;
+		var ay = _v0.b;
+		var bx = _v1.a;
+		var by = _v1.b;
+		return _Utils_Tuple2(ax + bx, ay + by);
 	});
-var $author$project$Main$note = F2(
-	function (i, j) {
-		var steps = A2($elm$core$Basics$modBy, 12, (i * 7) + (j * (12 - 4)));
+var $author$project$Main$degreeToNote = F2(
+	function (root, degree) {
+		return A2(
+			$author$project$Main$addVectors,
+			root,
+			A2(
+				$author$project$Main$transformVector,
+				_Utils_Tuple2(1, -1),
+				degree));
+	});
+var $elm$core$Set$foldl = F3(
+	function (func, initialState, _v0) {
+		var dict = _v0.a;
+		return A3(
+			$elm$core$Dict$foldl,
+			F3(
+				function (key, _v1, state) {
+					return A2(func, key, state);
+				}),
+			initialState,
+			dict);
+	});
+var $elm$core$Set$map = F2(
+	function (func, set) {
+		return $elm$core$Set$fromList(
+			A3(
+				$elm$core$Set$foldl,
+				F2(
+					function (x, xs) {
+						return A2(
+							$elm$core$List$cons,
+							func(x),
+							xs);
+					}),
+				_List_Nil,
+				set));
+	});
+var $elm$core$Dict$singleton = F2(
+	function (key, value) {
+		return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
+	});
+var $elm$core$Set$singleton = function (key) {
+	return $elm$core$Set$Set_elm_builtin(
+		A2($elm$core$Dict$singleton, key, _Utils_Tuple0));
+};
+var $elm$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
+	});
+var $elm$core$Set$union = F2(
+	function (_v0, _v1) {
+		var dict1 = _v0.a;
+		var dict2 = _v1.a;
+		return $elm$core$Set$Set_elm_builtin(
+			A2($elm$core$Dict$union, dict1, dict2));
+	});
+var $author$project$Main$buildChord = F2(
+	function (root, degrees) {
+		return A2(
+			$elm$core$Set$union,
+			$elm$core$Set$singleton(root),
+			A2(
+				$elm$core$Set$map,
+				$author$project$Main$degreeToNote(root),
+				degrees));
+	});
+var $author$project$Main$noteNameAt = F2(
+	function (x, y) {
+		var steps = A2($elm$core$Basics$modBy, 12, (x * 7) + (y * (12 - 4)));
 		var notes = _List_fromArray(
 			['c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#', 'a', 'a#', 'b']);
-		var _v0 = $elm$core$List$head(
-			A2($elm$core$List$drop, steps, notes));
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return x;
-		} else {
-			return '?';
-		}
-	});
-var $author$project$Main$generateSpace = F2(
-	function (grid, scale) {
-		var highlighted = function (x) {
-			return A2($elm$core$List$member, x, scale);
-		};
-		var cell = F2(
-			function (i, j) {
-				return {
-					highlighted: highlighted(
-						A2($author$project$Main$Vector2, i, j)),
-					i: i,
-					j: j,
-					text: A2($author$project$Main$note, i, j)
-				};
-			});
 		return A2(
-			$elm$core$List$map,
-			function (x) {
-				return A2(
-					cell,
-					A2($elm$core$Basics$modBy, grid.columns, x),
-					(x / grid.columns) | 0);
-			},
-			A2($elm$core$List$range, 0, (grid.rows * grid.columns) - 1));
+			$elm$core$Maybe$withDefault,
+			'?',
+			$elm$core$List$head(
+				A2($elm$core$List$drop, steps, notes)));
 	});
+var $author$project$Main$generateCells = function (model) {
+	var highlightedNotes = A2(
+		$author$project$Main$buildChord,
+		$author$project$Main$pickRoot(model.grid),
+		model.picked);
+	var cell = F2(
+		function (x, y) {
+			return {
+				highlighted: A2(
+					$elm$core$Set$member,
+					_Utils_Tuple2(x, y),
+					highlightedNotes),
+				text: A2($author$project$Main$noteNameAt, x, y),
+				x: x,
+				y: y
+			};
+		});
+	return A2(
+		$elm$core$List$map,
+		function (x) {
+			return A2(
+				cell,
+				A2($elm$core$Basics$modBy, model.grid.columns, x),
+				(x / model.grid.columns) | 0);
+		},
+		A2($elm$core$List$range, 0, (model.grid.rows * model.grid.columns) - 1));
+};
 var $rtfeldman$elm_css$Css$Preprocess$ApplyStyles = function (a) {
 	return {$: 'ApplyStyles', a: a};
 };
@@ -12480,13 +12603,31 @@ var $author$project$Main$gridStyle = function (grid) {
 				A2($rtfeldman$elm_css$Css$property, 'user-select', 'none')
 			]));
 };
-var $author$project$Main$dataset = function (field) {
+var $author$project$Main$decodeDataset = function (field) {
 	return A2(
 		$elm$json$Json$Decode$at,
 		_List_fromArray(
 			['target', 'dataset', field]),
 		$elm$json$Json$Decode$string);
 };
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $author$project$Main$decodeCellPosition = function () {
+	var toInt = $elm$json$Json$Decode$map(
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$String$toInt,
+			$elm$core$Maybe$withDefault(0)));
+	return A3(
+		$elm$json$Json$Decode$map2,
+		$elm$core$Tuple$pair,
+		toInt(
+			$author$project$Main$decodeDataset('x')),
+		toInt(
+			$author$project$Main$decodeDataset('y')));
+}();
 var $rtfeldman$elm_css$VirtualDom$Styled$on = F2(
 	function (eventName, handler) {
 		return A3(
@@ -12502,23 +12643,11 @@ var $rtfeldman$elm_css$Html$Styled$Events$on = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$Normal(decoder));
 	});
-var $author$project$Main$onMouseOverCell = function (tagger) {
-	var toInt = $elm$json$Json$Decode$map(
-		A2(
-			$elm$core$Basics$composeR,
-			$elm$core$String$toInt,
-			$elm$core$Maybe$withDefault(0)));
-	var position = A3(
-		$elm$json$Json$Decode$map2,
-		$author$project$Main$Vector2,
-		toInt(
-			$author$project$Main$dataset('i')),
-		toInt(
-			$author$project$Main$dataset('j')));
+var $author$project$Main$onCellClick = function (tagger) {
 	return A2(
 		$rtfeldman$elm_css$Html$Styled$Events$on,
-		'mouseover',
-		A2($elm$json$Json$Decode$map, tagger, position));
+		'click',
+		A2($elm$json$Json$Decode$map, tagger, $author$project$Main$decodeCellPosition));
 };
 var $rtfeldman$elm_css$VirtualDom$Styled$attribute = F2(
 	function (key, value) {
@@ -12961,7 +13090,6 @@ var $author$project$Main$highlightedCellStyle = $rtfeldman$elm_css$Css$batch(
 					$rtfeldman$elm_css$Css$hex('#FF644E'))
 				]))
 		]));
-var $rtfeldman$elm_css$Html$Styled$span = $rtfeldman$elm_css$Html$Styled$node('span');
 var $rtfeldman$elm_css$VirtualDom$Styled$Unstyled = function (a) {
 	return {$: 'Unstyled', a: a};
 };
@@ -12977,12 +13105,12 @@ var $author$project$Main$renderCell = function (cell) {
 			[
 				A2(
 				$rtfeldman$elm_css$Html$Styled$Attributes$attribute,
-				'data-i',
-				$elm$core$String$fromInt(cell.i)),
+				'data-x',
+				$elm$core$String$fromInt(cell.x)),
 				A2(
 				$rtfeldman$elm_css$Html$Styled$Attributes$attribute,
-				'data-j',
-				$elm$core$String$fromInt(cell.j)),
+				'data-y',
+				$elm$core$String$fromInt(cell.y)),
 				$rtfeldman$elm_css$Html$Styled$Attributes$css(
 				_List_fromArray(
 					[
@@ -12991,13 +13119,7 @@ var $author$project$Main$renderCell = function (cell) {
 			]),
 		_List_fromArray(
 			[
-				A2(
-				$rtfeldman$elm_css$Html$Styled$span,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$rtfeldman$elm_css$Html$Styled$text(cell.text)
-					]))
+				$rtfeldman$elm_css$Html$Styled$text(cell.text)
 			]));
 };
 var $rtfeldman$elm_css$VirtualDom$Styled$UnscopedStyles = function (a) {
@@ -13575,22 +13697,25 @@ var $author$project$Main$view = function (model) {
 				$rtfeldman$elm_css$Html$Styled$toUnstyled(
 				A2(
 					$rtfeldman$elm_css$Html$Styled$div,
+					_List_Nil,
 					_List_fromArray(
 						[
-							$rtfeldman$elm_css$Html$Styled$Attributes$css(
+							A2(
+							$rtfeldman$elm_css$Html$Styled$div,
 							_List_fromArray(
 								[
-									$author$project$Main$gridStyle(model.grid)
-								])),
-							$author$project$Main$onMouseOverCell($author$project$Main$SetRoot)
-						]),
-					A2(
-						$elm$core$List$map,
-						$author$project$Main$renderCell,
-						A2(
-							$author$project$Main$generateSpace,
-							model.grid,
-							A2($author$project$Main$buildChord, model.hoverChord, model.hoverRoot)))))
+									$rtfeldman$elm_css$Html$Styled$Attributes$css(
+									_List_fromArray(
+										[
+											$author$project$Main$gridStyle(model.grid)
+										])),
+									$author$project$Main$onCellClick($author$project$Main$PlaceScale)
+								]),
+							A2(
+								$elm$core$List$map,
+								$author$project$Main$renderCell,
+								$author$project$Main$generateCells(model)))
+						])))
 			]),
 		title: 'muspace'
 	};
@@ -13605,4 +13730,4 @@ var $author$project$Main$main = $elm$browser$Browser$document(
 		view: $author$project$Main$view
 	});
 _Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Vector2":{"args":[],"type":"{ i : Basics.Int, j : Basics.Int }"},"Browser.Dom.Viewport":{"args":[],"type":"{ scene : { width : Basics.Float, height : Basics.Float }, viewport : { x : Basics.Float, y : Basics.Float, width : Basics.Float, height : Basics.Float } }"}},"unions":{"Main.Msg":{"args":[],"tags":{"Resize":["Browser.Dom.Viewport"],"SetRoot":["Main.Vector2"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});}(this));
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"Main.Vector2":{"args":[],"type":"( Basics.Int, Basics.Int )"},"Browser.Dom.Viewport":{"args":[],"type":"{ scene : { width : Basics.Float, height : Basics.Float }, viewport : { x : Basics.Float, y : Basics.Float, width : Basics.Float, height : Basics.Float } }"}},"unions":{"Main.Msg":{"args":[],"tags":{"Resize":["Browser.Dom.Viewport"],"PlaceScale":["Main.Vector2"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}}}}})}});}(this));
