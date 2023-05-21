@@ -44,12 +44,14 @@ type alias Model =
     { grid : Grid
     , mode : Mode
     , picked : Scale
+    , placed : Scale
     }
 
 
 type Msg
     = Resize Dom.Viewport
     | PlaceScale Vector2
+    | SetMode Mode
 
 
 main =
@@ -66,6 +68,7 @@ init _ =
     ( { grid = { columns = 0, rows = 0, cellSize = 26, gap = 1 }
       , mode = Pick
       , picked = Set.fromList [ ( 1, 0 ), ( 0, 1 ) ]
+      , placed = Set.empty
       }
     , Task.perform Resize Dom.getViewport
     )
@@ -90,15 +93,25 @@ update msg model =
                 Pick ->
                     ( { model
                         | picked =
-                            toggleSet
-                                (noteToDegree (pickRoot model.grid) position)
+                            symmetricDifferenceSets
+                                (Set.singleton (noteToDegree (pickRoot model.grid) position))
                                 model.picked
                       }
                     , Cmd.none
                     )
 
                 Place ->
-                    ( model, Cmd.none )
+                    ( { model
+                        | placed =
+                            symmetricDifferenceSets
+                                (buildChord position model.picked)
+                                model.placed
+                      }
+                    , Cmd.none
+                    )
+
+        SetMode mode ->
+            ( { model | mode = mode }, Cmd.none )
 
 
 view : Model -> Browser.Document Msg
@@ -111,6 +124,25 @@ view model =
                 , onCellClick PlaceScale
                 ]
                 (List.map renderCell (generateCells model))
+            , Html.div
+                [ Attributes.css
+                    [ Css.position Css.fixed
+                    , Css.bottom (Css.em 2)
+                    , Css.left (Css.pct 50)
+                    , Css.transform (Css.translateX (Css.pct -50))
+                    ]
+                ]
+                [ Html.button
+                    [ Attributes.css [ buttonStyle (model.mode == Pick) ]
+                    , Events.onClick (SetMode Pick)
+                    ]
+                    [ Html.text "Pick" ]
+                , Html.button
+                    [ Attributes.css [ buttonStyle (model.mode == Place) ]
+                    , Events.onClick (SetMode Place)
+                    ]
+                    [ Html.text "Place" ]
+                ]
             ]
             |> Html.toUnstyled
         ]
@@ -159,6 +191,22 @@ highlightedCellStyle =
         ]
 
 
+buttonStyle : Bool -> Css.Style
+buttonStyle active =
+    let
+        borderStyle =
+            if active then
+                Css.inset
+
+            else
+                Css.outset
+    in
+    Css.batch
+        [ Css.fontFamily Css.monospace
+        , Css.border3 (Css.px 1) borderStyle (Css.hex "#D2D2D2")
+        ]
+
+
 decodeDataset : String -> Decode.Decoder String
 decodeDataset field =
     Decode.at [ "target", "dataset", field ] Decode.string
@@ -198,7 +246,12 @@ generateCells : Model -> List Cell
 generateCells model =
     let
         highlightedNotes =
-            buildChord (pickRoot model.grid) model.picked
+            case model.mode of
+                Pick ->
+                    buildChord (pickRoot model.grid) model.picked
+
+                Place ->
+                    model.placed
 
         cell x y =
             { x = x
@@ -269,10 +322,15 @@ transformVector ( tx, ty ) ( ax, ay ) =
     ( ax * tx, ay * ty )
 
 
-toggleSet : comparable -> Set.Set comparable -> Set.Set comparable
-toggleSet value set =
-    if Set.member value set then
-        Set.remove value set
+symmetricDifferenceSets : Set.Set comparable -> Set.Set comparable -> Set.Set comparable
+symmetricDifferenceSets set other =
+    Set.foldl
+        (\x xs ->
+            if Set.member x xs then
+                Set.remove x xs
 
-    else
-        Set.insert value set
+            else
+                Set.insert x xs
+        )
+        other
+        set
