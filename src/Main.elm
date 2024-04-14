@@ -35,23 +35,15 @@ type alias Grid =
     }
 
 
-type Mode
-    = Pick
-    | Place
-
-
 type alias Model =
     { grid : Grid
-    , mode : Mode
-    , picked : Scale
-    , placed : Scale
+    , selectedNotes : Scale
     }
 
 
 type Msg
     = Resize Dom.Viewport
-    | PlaceScale Vector2
-    | SetMode Mode
+    | ToggleNote Vector2
 
 
 main =
@@ -66,9 +58,7 @@ main =
 init : () -> ( Model, Cmd Msg )
 init _ =
     ( { grid = { columns = 0, rows = 0, cellSize = 26, gap = 1 }
-      , mode = Pick
-      , picked = Set.fromList [ ( 1, 0 ), ( 0, 1 ) ]
-      , placed = Set.empty
+      , selectedNotes = Set.empty
       }
     , Task.perform Resize Dom.getViewport
     )
@@ -88,30 +78,15 @@ update msg model =
             , Cmd.none
             )
 
-        PlaceScale position ->
-            case model.mode of
-                Pick ->
-                    ( { model
-                        | picked =
-                            symmetricDifferenceSets
-                                (Set.singleton (noteToDegree (pickRoot model.grid) position))
-                                model.picked
-                      }
-                    , Cmd.none
-                    )
-
-                Place ->
-                    ( { model
-                        | placed =
-                            symmetricDifferenceSets
-                                (buildChord position model.picked)
-                                model.placed
-                      }
-                    , Cmd.none
-                    )
-
-        SetMode mode ->
-            ( { model | mode = mode }, Cmd.none )
+        ToggleNote position ->
+            ( { model
+                | selectedNotes =
+                    symmetricDifferenceSets
+                        (Set.singleton position)
+                        model.selectedNotes
+              }
+            , Cmd.none
+            )
 
 
 view : Model -> Browser.Document Msg
@@ -121,28 +96,9 @@ view model =
         [ Html.div []
             [ Html.div
                 [ Attributes.css [ gridStyle model.grid ]
-                , onCellClick PlaceScale
+                , onCellClick ToggleNote
                 ]
                 (List.map renderCell (generateCells model))
-            , Html.div
-                [ Attributes.css
-                    [ Css.position Css.fixed
-                    , Css.bottom (Css.em 2)
-                    , Css.left (Css.pct 50)
-                    , Css.transform (Css.translateX (Css.pct -50))
-                    ]
-                ]
-                [ Html.button
-                    [ Attributes.css [ buttonStyle (model.mode == Pick) ]
-                    , Events.onClick (SetMode Pick)
-                    ]
-                    [ Html.text "Pick" ]
-                , Html.button
-                    [ Attributes.css [ buttonStyle (model.mode == Place) ]
-                    , Events.onClick (SetMode Place)
-                    ]
-                    [ Html.text "Place" ]
-                ]
             ]
             |> Html.toUnstyled
         ]
@@ -191,22 +147,6 @@ highlightedCellStyle =
         ]
 
 
-buttonStyle : Bool -> Css.Style
-buttonStyle active =
-    let
-        borderStyle =
-            if active then
-                Css.inset
-
-            else
-                Css.outset
-    in
-    Css.batch
-        [ Css.fontFamily Css.monospace
-        , Css.border3 (Css.px 1) borderStyle (Css.hex "#D2D2D2")
-        ]
-
-
 decodeDataset : String -> Decode.Decoder String
 decodeDataset field =
     Decode.at [ "target", "dataset", field ] Decode.string
@@ -245,19 +185,11 @@ renderCell cell =
 generateCells : Model -> List Cell
 generateCells model =
     let
-        highlightedNotes =
-            case model.mode of
-                Pick ->
-                    buildChord (pickRoot model.grid) model.picked
-
-                Place ->
-                    model.placed
-
         cell x y =
             { x = x
             , y = y
             , text = noteNameAt x y
-            , highlighted = Set.member ( x, y ) highlightedNotes
+            , highlighted = Set.member ( x, y ) model.selectedNotes
             }
     in
     List.range 0 ((model.grid.rows * model.grid.columns) - 1)
@@ -272,18 +204,13 @@ fitGrid width height grid =
     }
 
 
-pickRoot : Grid -> Vector2
-pickRoot grid =
-    ( grid.columns // 2, grid.rows // 2 )
-
-
 noteNameAt : Int -> Int -> String
 noteNameAt x y =
     let
         notes =
             [ "c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b" ]
 
-        -- x fifths and y thirds from the top-left corner
+        -- x fifths up and y thirds down because we start at the top-left corner
         steps =
             modBy 12 ((x * 7) + (y * (12 - 4)))
     in
