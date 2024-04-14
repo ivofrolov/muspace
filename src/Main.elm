@@ -208,7 +208,7 @@ noteNameAt : Int -> Int -> String
 noteNameAt x y =
     let
         notes =
-            [ "c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b" ]
+            [ "c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "h" ]
 
         -- x fifths up and y thirds down because we start at the top-left corner
         steps =

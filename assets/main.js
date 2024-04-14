@@ -7552,7 +7552,7 @@ var $author$project$Main$noteNameAt = F2(
 	function (x, y) {
 		var steps = A2($elm$core$Basics$modBy, 12, (x * 7) + (y * (12 - 4)));
 		var notes = _List_fromArray(
-			['c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#', 'a', 'a#', 'b']);
+			['c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#', 'a', 'a#', 'h']);
 		return A2(
 			$elm$core$Maybe$withDefault,
 			'?',
