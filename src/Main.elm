@@ -118,9 +118,9 @@ gridStyle grid =
         , Css.property "row-gap" "var(--gap)"
         , Css.property "column-gap" "var(--gap)"
         , Css.fontFamily Css.monospace
-        , Css.fontSize (Css.px (toFloat grid.cellSize / 2))
+        , Css.property "font-size" "calc(var(--cell-size) / 2)"
         , Css.textAlign Css.center
-        , Css.lineHeight (Css.px (toFloat grid.cellSize))
+        , Css.property "line-height" "var(--cell-size)"
         , Css.cursor Css.default
         , Css.property "user-select" "none"
         ]
