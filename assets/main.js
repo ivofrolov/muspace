@@ -5201,7 +5201,7 @@ var $elm$browser$Browser$Dom$getViewport = _Browser_withWindow(_Browser_getViewp
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2(
 		{
-			x: {K: 26, L: 0, P: 1, aE: 0},
+			x: {av: 26, K: 0, O: 1, aE: 0},
 			aF: $elm$core$Set$empty
 		},
 		A2($elm$core$Task$perform, $author$project$Main$Resize, $elm$browser$Browser$Dom$getViewport));
@@ -5212,7 +5212,7 @@ var $author$project$Main$fitGrid = F3(
 	function (width, height, grid) {
 		return _Utils_update(
 			grid,
-			{L: ((width + grid.P) / (grid.K + grid.P)) | 0, aE: ((height + grid.P) / (grid.K + grid.P)) | 0});
+			{K: 1 + (((width + grid.O) / (grid.av + grid.O)) | 0), aE: 1 + (((height + grid.O) / (grid.av + grid.O)) | 0)});
 	});
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
@@ -6647,7 +6647,7 @@ var $rtfeldman$elm_css$Css$Structure$concatMapLastStyleBlock = F2(
 var $elm$core$String$cons = _String_cons;
 var $robinheghan$murmur3$Murmur3$HashData = F4(
 	function (shift, seed, hash, charsProcessed) {
-		return {aa: charsProcessed, af: hash, U: seed, al: shift};
+		return {_: charsProcessed, ae: hash, T: seed, ak: shift};
 	});
 var $robinheghan$murmur3$Murmur3$c1 = 3432918353;
 var $robinheghan$murmur3$Murmur3$c2 = 461845907;
@@ -6666,14 +6666,14 @@ var $robinheghan$murmur3$Murmur3$rotlBy = F2(
 	});
 var $elm$core$Bitwise$xor = _Bitwise_xor;
 var $robinheghan$murmur3$Murmur3$finalize = function (data) {
-	var acc = (!(!data.af)) ? (data.U ^ A2(
+	var acc = (!(!data.ae)) ? (data.T ^ A2(
 		$robinheghan$murmur3$Murmur3$multiplyBy,
 		$robinheghan$murmur3$Murmur3$c2,
 		A2(
 			$robinheghan$murmur3$Murmur3$rotlBy,
 			15,
-			A2($robinheghan$murmur3$Murmur3$multiplyBy, $robinheghan$murmur3$Murmur3$c1, data.af)))) : data.U;
-	var h0 = acc ^ data.aa;
+			A2($robinheghan$murmur3$Murmur3$multiplyBy, $robinheghan$murmur3$Murmur3$c1, data.ae)))) : data.T;
+	var h0 = acc ^ data._;
 	var h1 = A2($robinheghan$murmur3$Murmur3$multiplyBy, 2246822507, h0 ^ (h0 >>> 16));
 	var h2 = A2($robinheghan$murmur3$Murmur3$multiplyBy, 3266489909, h1 ^ (h1 >>> 13));
 	return (h2 ^ (h2 >>> 16)) >>> 0;
@@ -6697,17 +6697,17 @@ var $robinheghan$murmur3$Murmur3$mix = F2(
 	});
 var $robinheghan$murmur3$Murmur3$hashFold = F2(
 	function (c, data) {
-		var res = data.af | ((255 & $elm$core$Char$toCode(c)) << data.al);
-		var _v0 = data.al;
+		var res = data.ae | ((255 & $elm$core$Char$toCode(c)) << data.ak);
+		var _v0 = data.ak;
 		if (_v0 === 24) {
 			return {
-				aa: data.aa + 1,
-				af: 0,
-				U: A2($robinheghan$murmur3$Murmur3$mix, data.U, res),
-				al: 0
+				_: data._ + 1,
+				ae: 0,
+				T: A2($robinheghan$murmur3$Murmur3$mix, data.T, res),
+				ak: 0
 			};
 		} else {
-			return {aa: data.aa + 1, af: res, U: data.U, al: data.al + 8};
+			return {_: data._ + 1, ae: res, T: data.T, ak: data.ak + 8};
 		}
 	});
 var $robinheghan$murmur3$Murmur3$hashString = F2(
@@ -7577,10 +7577,10 @@ var $author$project$Main$generateCells = function (model) {
 		function (x) {
 			return A2(
 				cell,
-				A2($elm$core$Basics$modBy, model.x.L, x),
-				(x / model.x.L) | 0);
+				A2($elm$core$Basics$modBy, model.x.K, x),
+				(x / model.x.K) | 0);
 		},
-		A2($elm$core$List$range, 0, (model.x.aE * model.x.L) - 1));
+		A2($elm$core$List$range, 0, (model.x.aE * model.x.K) - 1));
 };
 var $rtfeldman$elm_css$Css$Preprocess$ApplyStyles = function (a) {
 	return {$: 6, a: a};
@@ -7602,37 +7602,8 @@ var $rtfeldman$elm_css$Css$cursor = $rtfeldman$elm_css$Css$prop1('cursor');
 var $rtfeldman$elm_css$Css$Structure$Compatible = 0;
 var $rtfeldman$elm_css$Css$default = {a: 0, A: 'default'};
 var $rtfeldman$elm_css$Css$fontFamily = $rtfeldman$elm_css$Css$prop1('font-family');
-var $rtfeldman$elm_css$Css$fontSize = $rtfeldman$elm_css$Css$prop1('font-size');
-var $rtfeldman$elm_css$Css$lineHeight = $rtfeldman$elm_css$Css$prop1('line-height');
-var $rtfeldman$elm_css$Css$monospace = {M: 0, A: 'monospace'};
-var $rtfeldman$elm_css$Css$PxUnits = 0;
-var $elm$core$String$fromFloat = _String_fromNumber;
-var $rtfeldman$elm_css$Css$Internal$lengthConverter = F3(
-	function (units, unitLabel, numericValue) {
-		return {
-			bh: 0,
-			br: 0,
-			ad: 0,
-			l: 0,
-			az: 0,
-			ag: 0,
-			F: 0,
-			ah: 0,
-			ai: 0,
-			Q: 0,
-			R: 0,
-			y: 0,
-			aj: 0,
-			H: numericValue,
-			ao: 0,
-			aq: unitLabel,
-			aK: units,
-			A: _Utils_ap(
-				$elm$core$String$fromFloat(numericValue),
-				unitLabel)
-		};
-	});
-var $rtfeldman$elm_css$Css$px = A2($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, 'px');
+var $rtfeldman$elm_css$Css$height = $rtfeldman$elm_css$Css$prop1('height');
+var $rtfeldman$elm_css$Css$monospace = {L: 0, A: 'monospace'};
 var $rtfeldman$elm_css$Css$Internal$property = F2(
 	function (key, value) {
 		return $rtfeldman$elm_css$Css$Preprocess$AppendProperty(key + (':' + value));
@@ -7694,6 +7665,32 @@ var $rtfeldman$elm_css$Css$Internal$getOverloadedProperty = F3(
 		}
 	});
 var $rtfeldman$elm_css$Css$Internal$IncompatibleUnits = 0;
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $rtfeldman$elm_css$Css$Internal$lengthConverter = F3(
+	function (units, unitLabel, numericValue) {
+		return {
+			bh: 0,
+			br: 0,
+			ac: 0,
+			l: 0,
+			az: 0,
+			af: 0,
+			F: 0,
+			ag: 0,
+			ah: 0,
+			P: 0,
+			Q: 0,
+			y: 0,
+			ai: 0,
+			H: numericValue,
+			an: 0,
+			ap: unitLabel,
+			aK: units,
+			A: _Utils_ap(
+				$elm$core$String$fromFloat(numericValue),
+				unitLabel)
+		};
+	});
 var $rtfeldman$elm_css$Css$Internal$lengthForOverloadedProperty = A3($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, '', 0);
 var $rtfeldman$elm_css$Css$textAlign = function (fn) {
 	return A3(
@@ -7702,6 +7699,8 @@ var $rtfeldman$elm_css$Css$textAlign = function (fn) {
 		'text-align',
 		fn($rtfeldman$elm_css$Css$Internal$lengthForOverloadedProperty));
 };
+var $rtfeldman$elm_css$Css$VhUnits = 0;
+var $rtfeldman$elm_css$Css$vh = A2($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, 'vh');
 var $author$project$Main$gridStyle = function (grid) {
 	return $rtfeldman$elm_css$Css$batch(
 		_List_fromArray(
@@ -7709,7 +7708,7 @@ var $author$project$Main$gridStyle = function (grid) {
 				A2(
 				$rtfeldman$elm_css$Css$property,
 				'--columns',
-				$elm$core$String$fromInt(grid.L)),
+				$elm$core$String$fromInt(grid.K)),
 				A2(
 				$rtfeldman$elm_css$Css$property,
 				'--rows',
@@ -7717,24 +7716,25 @@ var $author$project$Main$gridStyle = function (grid) {
 				A2(
 				$rtfeldman$elm_css$Css$property,
 				'--cell-size',
-				$elm$core$String$fromInt(grid.K) + 'px'),
+				$elm$core$String$fromInt(grid.av) + 'px'),
 				A2(
 				$rtfeldman$elm_css$Css$property,
 				'--gap',
-				$elm$core$String$fromInt(grid.P) + 'px'),
+				$elm$core$String$fromInt(grid.O) + 'px'),
 				A2($rtfeldman$elm_css$Css$property, 'display', 'grid'),
 				A2($rtfeldman$elm_css$Css$property, 'grid-template-columns', 'repeat(var(--columns), var(--cell-size))'),
 				A2($rtfeldman$elm_css$Css$property, 'grid-template-rows', 'repeat(var(--rows), var(--cell-size))'),
 				A2($rtfeldman$elm_css$Css$property, 'row-gap', 'var(--gap)'),
 				A2($rtfeldman$elm_css$Css$property, 'column-gap', 'var(--gap)'),
 				$rtfeldman$elm_css$Css$fontFamily($rtfeldman$elm_css$Css$monospace),
-				$rtfeldman$elm_css$Css$fontSize(
-				$rtfeldman$elm_css$Css$px(grid.K / 2)),
+				A2($rtfeldman$elm_css$Css$property, 'font-size', 'calc(var(--cell-size) / 2)'),
 				$rtfeldman$elm_css$Css$textAlign($rtfeldman$elm_css$Css$center),
-				$rtfeldman$elm_css$Css$lineHeight(
-				$rtfeldman$elm_css$Css$px(grid.K)),
+				A2($rtfeldman$elm_css$Css$property, 'line-height', 'var(--cell-size)'),
 				$rtfeldman$elm_css$Css$cursor($rtfeldman$elm_css$Css$default),
-				A2($rtfeldman$elm_css$Css$property, 'user-select', 'none')
+				A2($rtfeldman$elm_css$Css$property, 'user-select', 'none'),
+				A2($rtfeldman$elm_css$Css$property, 'overflow', 'clip'),
+				$rtfeldman$elm_css$Css$height(
+				$rtfeldman$elm_css$Css$vh(100))
 			]));
 };
 var $elm$core$Basics$composeR = F3(
@@ -7814,14 +7814,13 @@ var $rtfeldman$elm_css$Css$borderColor = function (c) {
 	return A2($rtfeldman$elm_css$Css$property, 'border-color', c.A);
 };
 var $rtfeldman$elm_css$Css$borderStyle = $rtfeldman$elm_css$Css$prop1('border-style');
-var $rtfeldman$elm_css$Css$height = $rtfeldman$elm_css$Css$prop1('height');
 var $rtfeldman$elm_css$Css$withPrecedingHash = function (str) {
 	return A2($elm$core$String$startsWith, '#', str) ? str : A2($elm$core$String$cons, '#', str);
 };
 var $rtfeldman$elm_css$Css$erroneousHex = function (str) {
 	return {
-		at: 1,
-		av: 0,
+		as: 1,
+		au: 0,
 		w: 0,
 		ay: 0,
 		aD: 0,
@@ -8079,8 +8078,8 @@ var $rtfeldman$elm_css$Css$validHex = F5(
 			var blue = _v6.a.a;
 			var alpha = _v6.b.a;
 			return {
-				at: alpha / 255,
-				av: blue,
+				as: alpha / 255,
+				au: blue,
 				w: 0,
 				ay: green,
 				aD: red,
@@ -8199,7 +8198,7 @@ var $rtfeldman$elm_css$Css$pseudoClass = function (_class) {
 var $rtfeldman$elm_css$Css$hover = $rtfeldman$elm_css$Css$pseudoClass('hover');
 var $rtfeldman$elm_css$Css$PercentageUnits = 0;
 var $rtfeldman$elm_css$Css$pct = A2($rtfeldman$elm_css$Css$Internal$lengthConverter, 0, '%');
-var $rtfeldman$elm_css$Css$solid = {n: 0, V: 0, A: 'solid'};
+var $rtfeldman$elm_css$Css$solid = {n: 0, U: 0, A: 'solid'};
 var $rtfeldman$elm_css$Css$width = $rtfeldman$elm_css$Css$prop1('width');
 var $author$project$Main$cellStyle = $rtfeldman$elm_css$Css$batch(
 	_List_fromArray(

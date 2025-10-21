@@ -123,6 +123,8 @@ gridStyle grid =
         , Css.property "line-height" "var(--cell-size)"
         , Css.cursor Css.default
         , Css.property "user-select" "none"
+        , Css.property "overflow" "clip"
+        , Css.height (Css.vh 100)
         ]
 
 
@@ -199,8 +201,8 @@ generateCells model =
 fitGrid : Int -> Int -> Grid -> Grid
 fitGrid width height grid =
     { grid
-        | columns = (width + grid.gap) // (grid.cellSize + grid.gap)
-        , rows = (height + grid.gap) // (grid.cellSize + grid.gap)
+        | columns = 1 + (width + grid.gap) // (grid.cellSize + grid.gap)
+        , rows = 1 + (height + grid.gap) // (grid.cellSize + grid.gap)
     }
 
 
